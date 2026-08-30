@@ -152,19 +152,32 @@ WHERE NOT EXISTS (
 6.	Liste todos os pedidos realizados nos últimos 30 dias.
 
 ```sql
-
+SELECT * FROM orders
+WHERE order_date >= (now() - interval '30 days'); 
 ```
 
 7.	Liste os pedidos e os respectivos nomes de usuário.
 
 ```sql
-
+SELECT 
+    o.id id_pedido, 
+    u.name usuário
+FROM orders o
+LEFT JOIN users u
+    on o.user_id = u.id
+ORDER BY o.id;
 ```
 
 8.	Liste todos os usuários e seus pedidos, inclusive usuários sem pedidos.
 
 ```sql
-
+SELECT 
+    u.name usuario,
+    o.id pedido
+FROM users u
+LEFT JOIN orders o
+    ON u.id = o.user_id
+ORDER BY u.name;    
 ```
 
 9.	Liste todos os usuários (id, nome e email) que realizaram pelo menos um pedido.
