@@ -108,17 +108,103 @@ INSERT INTO orders_products (order_id, product_id, quantity, unit_price) VALUES
 ## Prática DML/DQL
 
 1.	Liste os produtos com preço superior a R$ 1000.
+
+```sql
+SELECT name AS Produto, price AS Preço
+FROM products
+WHERE price > 1000;
+```
+
 2.	Liste os produtos ordenados pelo preço, do maior para o menor.
+
+```sql
+SELECT name AS Produto, price AS Preço
+FROM products
+ORDER BY price DESC;
+```
+
 3.	Aumente o preço de todos os produtos da `Dell` em 10%.
+
+```sql
+UPDATE products
+SET price = price*1.1
+WHERE name ILIKE '%Dell%'; 
+```
+
 4.	Exclua todos os produtos que sejam do tipo `Macbook`.
+
+```sql
+DELETE FROM products
+WHERE name ILIKE '%Macbook%';
+```
+
 5.	Exclua um produto que não possua pedidos associados.
+
+```sql
+DELETE FROM products p
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM orders_products op
+    WHERE p.id = op.product_id
+);
+```
+
 6.	Liste todos os pedidos realizados nos últimos 30 dias.
+
+```sql
+
+```
+
 7.	Liste os pedidos e os respectivos nomes de usuário.
+
+```sql
+
+```
+
 8.	Liste todos os usuários e seus pedidos, inclusive usuários sem pedidos.
+
+```sql
+
+```
+
 9.	Liste todos os usuários (id, nome e email) que realizaram pelo menos um pedido.
+
+```sql
+
+```
+
 10.	Liste produtos que nunca foram vendidos.
+
+```sql
+
+```
+
 11.	Liste usuários que nunca realizaram pedidos.
+
+```sql
+
+```
+
 12.	Liste os produtos com preço acima da média em ordem decrescente.
+
+```sql
+
+```
+
 13.	Liste a quantidade de pedidos realizados por cada usuário.
+
+```sql
+
+```
+
 14.	Listar os três produtos mais vendidos.
+
+```sql
+
+```
+
 15.	Gerar um relatório com: usuários, quantidade de pedidos e valor total comprado.
+
+```sql
+
+```
