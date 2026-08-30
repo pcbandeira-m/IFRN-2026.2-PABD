@@ -246,6 +246,15 @@ from funcionario f
 group by numero_departamento
 order by numero_departamento;
 
+-- Qual o número de funcionários que trabalham em cada departamento (desconsiderando nulos)?
+select
+   numero_departamento,
+   count(*) qtd_funcionarios
+from funcionario f
+where numero_departamento is not null
+group by numero_departamento
+order by numero_departamento;
+
 -- Listar: numero e nome do departamento, quantidade de funcionários, média salarial e folha salarial
 select 
    d.numero numero_departamento,
