@@ -110,7 +110,7 @@ INSERT INTO orders_products (order_id, product_id, quantity, unit_price) VALUES
 1.	Liste os produtos com preço superior a R$ 1000.
 
 ```sql
-SELECT name AS Produto, price AS Preço
+SELECT name Produto, price Preço
 FROM products
 WHERE price > 1000;
 ```
@@ -118,7 +118,7 @@ WHERE price > 1000;
 2.	Liste os produtos ordenados pelo preço, do maior para o menor.
 
 ```sql
-SELECT name AS Produto, price AS Preço
+SELECT name Produto, price Preço
 FROM products
 ORDER BY price DESC;
 ```
@@ -183,41 +183,120 @@ ORDER BY u.name;
 9.	Liste todos os usuários (id, nome e email) que realizaram pelo menos um pedido.
 
 ```sql
-
+SELECT 
+    u.id id_usuario,
+    u.name usuario,
+    u.email email
+FROM users u
+WHERE EXISTS (
+    SELECT o.user_id
+    FROM orders o
+    WHERE o.user_id = u.id
+);
 ```
 
 10.	Liste produtos que nunca foram vendidos.
 
-```sql
+#### Tabelas e atributos envolvidos
+>- products: id
+>- orders: id e status
+>- orders_products: order_id e product_id
 
+#### Tabela Verdade
+
+| A | B | AND | NAND |
+|---|---|---|---|
+| F | F | <center>F | <center>V |
+| F | V | <center>F | <center>V |
+| V | F | <center>F | <center>V |
+| V | V | <center>V | <center>F |
+
+#### Análise do problema
+- O produto está associado a um pedido?
+- Se está associado, seu `status` está cancelado?
+
+#### Resolução
+
+```sql
+SELECT * 
+FROM products p
+WHERE NOT EXISTS (
+    SELECT *
+    FROM orders_products op
+    JOIN orders o 
+        ON op.order_id = o.id
+    WHERE op.product_id = p.id
+        AND o.status != 'canceled'
+); 
 ```
 
 11.	Liste usuários que nunca realizaram pedidos.
 
 ```sql
-
+SELECT *
+FROM users u
+WHERE NOT EXISTS (
+    SELECT *
+    FROM orders o
+    WHERE u.id = o.user_id
+);
 ```
 
 12.	Liste os produtos com preço acima da média em ordem decrescente.
 
 ```sql
-
+SELECT *
+FROM products p
+WHERE p.price > (
+    SELECT AVG(p.price)
+    FROM products p
+)
+ORDER BY p.price DESC;
 ```
 
 13.	Liste a quantidade de pedidos realizados por cada usuário.
 
 ```sql
-
+SELECT 
+    u.name user_name,
+    COUNT(o.id) orders_count
+FROM users u
+LEFT JOIN orders o 
+    ON u.id = o.user_id 
+   AND o.status != 'canceled'
+GROUP BY u.id, u.name;
 ```
 
 14.	Listar os três produtos mais vendidos.
 
 ```sql
-
+SELECT 
+    p.name,
+    p.price,
+    SUM(op.quantity) top_sold
+FROM products p
+JOIN orders_products op 
+    ON p.id = op.product_id
+JOIN orders o 
+    ON op.order_id = o.id
+WHERE o.status != 'canceled'
+GROUP BY p.id
+ORDER BY top_sold DESC
+LIMIT 3;
 ```
 
 15.	Gerar um relatório com: usuários, quantidade de pedidos e valor total comprado.
 
 ```sql
-
+SELECT 
+    u.id user_id,
+    u.name user_name,
+    COUNT(o.id) orders_qnt,
+    COALESCE(SUM(o.total), 0) purshaded_value
+FROM users u
+LEFT JOIN orders o 
+    ON u.id = o.user_id 
+   AND o.status != 'canceled'
+GROUP BY u.id, u.name
+ORDER BY u.id;
 ```
