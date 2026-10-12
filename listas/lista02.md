@@ -19,17 +19,63 @@ A gerência quer um painel rápido para avaliar o desempenho dos funcionários. 
 
 *Dica*: Use LEFT JOIN para não excluir funcionários recém-contratados que ainda não processaram locações, e COALESCE para tratar nulos como zero.
 
+### Resolução:
+```sql
+CREATE VIEW v_staff_performance AS
+SELECT
+    staff_id AS id_funcionario,
+    first_name || ' ' || last_name AS nome_completo,
+    
+```
+
 ---
 
 ## Questão 02 - View Materializada de Receita por Categoria
 
 O relatório de receita por categoria de filme é muito pesado, pois exige cruzar `category`, `film_category`, `inventory`, `rental` e `payment`. Crie uma Materialized View chamada `mv_category_total_sales` que liste o nome da categoria e o total de receita gerado por ela. Crie um índice único na MV que permita que ela seja atualizada de forma não-bloqueante (CONCURRENTLY). Escreva o comando SQL para recarregar os dados da MV sem bloquear as consultas dos usuários do sistema.
 
+### Resolução:
+```sql
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_category_total_sales AS
+SELECT
+
+```
+
 ---
 
 ## Questão 03 - Otimizando Filmes Atrasados
 
 O sistema de cobrança roda a cada hora buscando locações que ainda não foram devolvidas (`return_date IS NULL`) para calcular multas. Como a tabela `rental` é grande e a maioria dos filmes já foi devolvida, um *Seq Scan* é muito caro. Crie um índice (parcial?) na tabela `rental` que indexe apenas as locações em aberto. Em seguida, escreva a consulta e use o `EXPLAIN ANALYZE` para provar que o índice está sendo utilizado.
+
+### Resolução:
+```sql
+CREATE INDEX IF NOT EXISTS open_rentals
+ON rental(rental_date)
+WHERE rental_date IS NULL;
+
+EXPLAIN ANALYZE
+SELECT * FROM rental WHERE rental_date IS NULL;
+
+/*
+#### Sem índices ####
+
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_unq_rental_rental_date_inventory_id_customer_id on rental  (cost=0.29..6.06 rows=1 width=36) (actual time=0.056..0.056 rows=0 loops=1)
+   Index Cond: (rental_date IS NULL)
+ Planning Time: 0.219 ms
+ Execution Time: 0.067 ms
+
+
+#### Com índice parcial ####
+
+                                                      QUERY PLAN                                                      
+----------------------------------------------------------------------------------------------------------------------
+ Index Scan using open_rentals on rental  (cost=0.12..4.16 rows=1 width=36) (actual time=0.002..0.002 rows=0 loops=1)
+ Planning Time: 0.195 ms
+ Execution Time: 0.014 ms
+*/
+```
 
 ---
 
@@ -46,6 +92,51 @@ Sempre que o cliente abre seu perfil no aplicativo, o sistema busca o histórico
 `SELECT * FROM payment WHERE customer_id = X ORDER BY payment_date DESC`.
 
 Para otimizar essa consulta específica, crie um índice multicoluna na tabela `payment`. Qual coluna deve vir primeiro no índice e por quê?
+
+
+### Resolução:
+```sql
+CREATE INDEX IF NOT EXISTS idx_payment_history_by_costumer
+ON payment(customer_id, payment_date);
+
+EXPLAIN ANALYZE
+SELECT * FROM payment 
+WHERE customer_id = 1 
+ORDER BY payment_date DESC;
+
+/*
+#### Sem índice ####
+
+                                                            QUERY PLAN                                                             
+-----------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=73.13..73.20 rows=30 width=26) (actual time=0.056..0.059 rows=30 loops=1)
+   Sort Key: payment_date DESC
+   Sort Method: quicksort  Memory: 26kB
+   ->  Bitmap Heap Scan on payment  (cost=4.52..72.39 rows=30 width=26) (actual time=0.037..0.045 rows=30 loops=1)
+         Recheck Cond: (customer_id = 1)
+         Heap Blocks: exact=3
+         ->  Bitmap Index Scan on idx_fk_customer_id  (cost=0.00..4.51 rows=30 width=0) (actual time=0.010..0.010 rows=30 loops=1)
+               Index Cond: (customer_id = 1)
+ Planning Time: 0.155 ms
+ Execution Time: 0.083 ms
+
+
+ #### Com índice ####
+
+                                                                   QUERY PLAN                                                                   
+------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=73.13..73.20 rows=30 width=26) (actual time=0.074..0.076 rows=30 loops=1)
+   Sort Key: payment_date DESC
+   Sort Method: quicksort  Memory: 26kB
+   ->  Bitmap Heap Scan on payment  (cost=4.52..72.39 rows=30 width=26) (actual time=0.055..0.063 rows=30 loops=1)
+         Recheck Cond: (customer_id = 1)
+         Heap Blocks: exact=3
+         ->  Bitmap Index Scan on idx_payment_history_by_costumer  (cost=0.00..4.51 rows=30 width=0) (actual time=0.049..0.049 rows=30 loops=1)
+               Index Cond: (customer_id = 1)
+ Planning Time: 0.266 ms
+ Execution Time: 0.102 ms
+*/
+```
 
 ---
 

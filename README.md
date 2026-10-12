@@ -45,10 +45,6 @@ Diferença importante: aqui usamos `127.0.0.1`, não `localhost`. No PostgreSQL,
 
 # 6. Exibir todas as tabelas
 ```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
-  AND table_type = 'BASE TABLE';
 ```
 
 # 7. Comando úteis do psql
