@@ -12,16 +12,25 @@ source env/bin/activate
 ## Criar novo projeto Django
 
 ```bash
-mkdir dvdrental
-cd dvdrental
 django-admin startproject dvdrental
 cd dvdrental
 ```
 
 ## Instalar dependências
 
+Crie o requirements.txt na raiz do projeto e adicione o conteúdo:
+
+```txt
+Django>=5.2,<5.3
+djangorestframework>=3.16,<3.17
+drf-spectacular>=0.28,<0.29
+psycopg[binary]>=3.2,<4
+```
+
+Instale as dependências:
+
 ```bash
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Crie um novo aplicativo dentro do projeto
@@ -48,10 +57,24 @@ DATABASES = {
         'NAME': 'dvdrental',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }
+```
+
+## Verificar a conexão com o banco de dados
+
+```bash
+python manage.py shell
+```
+
+No shell:
+```python
+from django.db import connection
+with connection.cursor() as cursor:
+    cursor.execute("SELECT current_database(), current_user, version()")
+    print(cursor.fetchone())
 ```
 
 ## Mapear o banco existente
